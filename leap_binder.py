@@ -1,5 +1,6 @@
 from dataset import load_dataset
 # Tensorleap imports
+from code_loader.default_metrics import categorical_crossentropy
 from code_loader.inner_leap_binder.leapbinder_decorators import *
 from code_loader.contract.datasetclasses import PreprocessResponse
 from code_loader.visualizers.default_visualizers import default_image_visualizer
@@ -61,10 +62,12 @@ def custom_metric_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray
 
 @tensorleap_custom_loss("categorical_crossentropy")
 def custom_loss_categorical_crossentropy(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray[np.float32]:
-    # categorical crossentropy loss implementation - returns one value per sample
-    y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-    loss = -np.sum(y_true * np.log(y_pred_clipped), axis=-1)
-    return loss.astype(np.float32)
+    # softmax on y_pred
+    y_pred_softmaxed = np.exp(y_pred) / np.sum(np.exp(y_pred), axis=-1, keepdims=True)
+    #convert y_true to one-hot encoding
+    y_true_one_hot = np.zeros_like(y_pred)
+    y_true_one_hot[np.arange(len(y_true)), y_true.astype(int)] = 1
+    return categorical_crossentropy(y_true_one_hot, y_pred_softmaxed)
 
 @tensorleap_custom_visualizer('default_image_visualizer', LeapDataType.Image)
 def image_visualizer(data: np.float32):
