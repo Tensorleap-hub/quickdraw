@@ -1,0 +1,11 @@
+projectId: 6991c72c1870637a4392d73f
+secretId: ""
+entryFile: leap_integration.py
+include:
+    - leap_binder.py
+    - leap_test.py
+    - leap_integration.py
+    - dataset.py
+    - requirements.txt
+    - data_download.py
+pythonVersion: py39
