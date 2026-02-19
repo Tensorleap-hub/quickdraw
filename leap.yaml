@@ -8,4 +8,5 @@ include:
     - dataset.py
     - requirements.txt
     - data_download.py
+    - config.py
 pythonVersion: py39

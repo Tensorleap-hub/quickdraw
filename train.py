@@ -4,12 +4,13 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 from tqdm import tqdm
-from dataset import QuickDrawDataset, NPY_PATH, NDJSON_PATH
+from dataset import QuickDrawDataset
+from config import NPY_PATH, NDJSON_PATH
 
 
 # Configuration
 BATCH_SIZE = 128
-EPOCHS = 1
+EPOCHS = 5
 LEARNING_RATE = 0.001
 MAX_SAMPLES_PER_CLASS = None  # Set to None for full dataset
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")

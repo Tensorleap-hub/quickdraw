@@ -4,9 +4,9 @@ import numpy as np
 import json
 import os
 import glob
+from datetime import datetime, timezone
 from sklearn.model_selection import train_test_split
-from tqdm import tqdm  # Progress bar
-from data_download import classes
+import config
 
 class QuickDrawDataset(Dataset):
     def __init__(self, npy_dir, ndjson_dir, max_samples_per_class=None, 
@@ -59,10 +59,27 @@ class QuickDrawDataset(Dataset):
                     try:
                         # Extract only what we need for error slicing
                         entry = json.loads(line)
+                        # Parse timestamp to global Unix timestamp (UTC, seconds)
+                        ts_val = entry.get('timestamp')
+                        if ts_val is not None:
+                            try:
+                                s = str(ts_val).replace(' UTC', "")[:-6]
+                                dt = datetime.fromisoformat(s)
+                                timestamp = dt.timestamp() if dt.tzinfo else datetime(*dt.timetuple()[:6], tzinfo=timezone.utc).timestamp()
+                            except (ValueError, TypeError):
+                                timestamp = 0.0
+                        else:
+                            timestamp = 0.0
+                        #convert timestamp to days since Jan 1, 1970
+                        timestamp = timestamp // (60 * 60 * 24)
+                        drawing = entry.get('drawing', [])
                         meta = {
                             'country': entry.get('countrycode', 'UNK'),
                             'recognized': entry.get('recognized', False),
-                            'key_id': entry.get('key_id', '')
+                            'key_id': entry.get('key_id', ''),
+                            'timestamp': timestamp,
+                            'word': entry.get('word', ''),
+                            'num_strokes': len(drawing) if isinstance(drawing, list) else 0,
                         }
 
                         # Store mapping info
@@ -133,22 +150,22 @@ class QuickDrawDataset(Dataset):
 
         # 3. Retrieve Metadata
         meta = self._all_metadata[global_idx]
+        cls_name = self.classes[class_idx]
         label = class_idx
 
         return {
             'image': img_tensor,  # Input for Model
             'label': label,  # Ground Truth
+            'label_name': cls_name,  # Metadata for Slicing
             'country': meta['country'],  # Metadata for Slicing
             'recognized': meta['recognized'],  # Metadata for Slicing
-            'key_id': meta['key_id']  # Unique ID for tracking
+            'key_id': meta['key_id'],  # Unique ID for tracking
+            'timestamp': meta['timestamp'],  # Global Unix timestamp (UTC)
+            'word': meta['word'],  # Prompt word (for validation)
+            'num_strokes': meta['num_strokes'],  # Drawing complexity
         }
 
 
-# --- Usage Example ---
-
-# Define your paths
-NPY_PATH = "/Users/amitcohen/tensorleap/data/quickdraw_data/npy" #/home/ssm-user/
-NDJSON_PATH = "/Users/amitcohen/tensorleap/data/quickdraw_data/ndjson"
 
 # Initialize (This takes about 30s-1min to parse 5M metadata lines)
 # Set max_samples_per_class=1000 first to test quickly!
@@ -163,7 +180,7 @@ def load_dataset(max_samples_per_class=None, split=None):
     Returns:
         QuickDrawDataset: Dataset instance for the specified split
     """
-    return QuickDrawDataset(NPY_PATH, NDJSON_PATH, max_samples_per_class, split=split)
+    return QuickDrawDataset(config.NPY_PATH, config.NDJSON_PATH, max_samples_per_class, split=split)
 
 def create_dataloader(max_samples_per_class=None, split='train', batch_size=64, shuffle=True):
     """

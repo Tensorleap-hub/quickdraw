@@ -2,8 +2,10 @@ from code_loader.plot_functions.visualize import visualize
 from leap_binder import *
 from code_loader.inner_leap_binder.leapbinder_decorators import tensorleap_load_model, tensorleap_integration_test
 import onnxruntime as ort
-from data_download import classes
+from dataset import QuickDrawDataset
+import config
 
+classes = QuickDrawDataset(config.NPY_PATH, config.NDJSON_PATH).classes
 prediction_type1 = PredictionTypeHandler('classes', classes, channel_dim=-1)
 
 @tensorleap_load_model([prediction_type1])
@@ -30,12 +32,17 @@ def check_custom_test_mapping(idx, subset):
     visualize(img_vis)
 
     metric_result = custom_metric_accuracy(gt, y_pred[0])
+    predicted_label = predicted_label_name(gt, y_pred[0])
 
     loss_ret = custom_loss_categorical_crossentropy(gt, y_pred[0])
 
-    m1 = metadata_country(idx, subset)
-    m2 = metadata_label(idx, subset)
-    m3 = metadata_recognized(idx, subset)
+    country = metadata_country(idx, subset)
+    label = metadata_label(idx, subset)
+    label_id = metadata_label_id(idx, subset)
+    recognized = metadata_recognized(idx, subset)
+    timestamp = metadata_timestamp(idx, subset)
+    word = metadata_word(idx, subset)
+    num_strokes = metadata_num_strokes(idx, subset)
 
     # here the user can return whatever he wants
 
