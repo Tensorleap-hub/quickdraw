@@ -23,7 +23,7 @@ def preprocess_func() -> List[PreprocessResponse]:
     response = [train, val, test]
     return response
 
-@tensorleap_input_encoder("input")
+@tensorleap_input_encoder("input", channel_dim=1)
 def input_encoder(idx: int, preprocess: PreprocessResponse) -> np.ndarray:
     return np.array(preprocess.data[idx]["image"]).astype('float32')
 
