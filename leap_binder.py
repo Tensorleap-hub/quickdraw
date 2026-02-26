@@ -48,9 +48,9 @@ def metadata_country(idx: int, preprocess: PreprocessResponse) -> str:
     return country
 
 @tensorleap_metadata("recognized")
-def metadata_recognized(idx: int, preprocess: PreprocessResponse) -> bool:
+def metadata_recognized(idx: int, preprocess: PreprocessResponse) -> int:
     recognized = preprocess.data[idx]['recognized']
-    return bool(recognized)
+    return int(recognized)
 
 @tensorleap_metadata("timestamp")
 def metadata_timestamp(idx: int, preprocess: PreprocessResponse) -> float:
